@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Te Lo Cuento - Producción Pro</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #0a0a0a;
+        }
+
+        .container {
+            background-color: rgba(30, 30, 30, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            width: 100%;
+            max-width: 700px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #00d2ff;
+            margin-top: 0;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+            font-size: 1.5rem;
+        }
+        h2 {
+            border-bottom: 2px solid #00d2ff;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: #ffffff;
+        }
+        .form-group { margin-bottom: 15px; }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+        input[type="file"], input[type="range"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #2d2d2d;
+            color: #fff;
+            font-size: 14px;
+        }
+        input[type="file"]::file-selector-button {
+            background-color: #00d2ff;
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            transition: background 0.2s;
+        }
+        input[type="file"]::file-selector-button:hover { background-color: #33ddff; }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex: 1;
+            min-width: 100px;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-play { background-color: #28a745; color: white; }
+        .btn-stop { background-color: #dc3545; color: white; }
+        .btn-export { background-color: #007bff; color: white; }
+        .btn-reset { background-color: #6c757d; color: white; }
+
+        .timer-display {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #00d2ff;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+            background-color: #000000;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #444;
+            display: block;
+        }
+        
+        @media (orientation: portrait) and (max-width: 768px) {
+            canvas {
+                aspect-ratio: 9/16;
+                max-height: 70vh;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            canvas {
+                aspect-ratio: 16/9;
+                height: 350px;
+            }
+        }
+
+        audio { display: none; }
+
+        .music-preview-panel {
+            margin-top: 12px;
+            padding: 12px;
+            background-color: rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .music-seek-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .music-seek-row button {
+            padding: 8px 10px;
+            font-size: 11px;
+            min-width: auto;
+            flex: 0 0 auto;
+            background-color: #3d3d3d;
+            color: white;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .music-seek-row button:hover { background-color: #505050; }
+        
+        .music-slider-container {
+            flex: 1;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .music-slider {
+            flex: 1;
+            padding: 0 !important;
+            height: 24px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        .music-slider::-webkit-slider-runnable-track {
+            height: 6px;
+            background: #555;
+            border-radius: 3px;
+        }
+        .music-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #00d2ff;
+            border-radius: 50%;
+            margin-top: -6px;
+            box-shadow: 0 0 6px rgba(0, 210, 255, 0.6);
+        }
+        .music-slider::-moz-range-track {
+            height: 6px;
+            background: #555;
+            border-radius: 3px;
+        }
+        .music-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #00d2ff;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 0 6px rgba(0, 210, 255, 0.6);
+        }
+        
+        .music-time-label {
+            font-family: monospace;
+            font-size: 11px;
+            color: #00d2ff;
+            min-width: 42px;
+            text-align: center;
+        }
+        
+        .music-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .music-controls-row button {
+            padding: 8px 12px;
+            font-size: 12px;
+            min-width: auto;
+            flex: 0 0 auto;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .music-controls-row .btn-mark {
+            background-color: #ff9800;
+            color: white;
+            font-weight: bold;
+        }
+        .music-controls-row .btn-mark:hover { background-color: #ffa726; }
+        
+        .music-mark-display {
+            font-family: monospace;
+            font-weight: bold;
+            color: #4CAF50;
+            font-size: 0.9rem;
+            margin-left: auto;
+            background-color: rgba(76, 175, 80, 0.15);
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(76, 175, 80, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Te Lo Cuento - Producción Pro</h1>
+        
+        <h2>Configuración de Producción</h2>
+        
+        <div class="form-group">
+            <label for="fondo">Fondo (Imagen/Video para el Lienzo):</label>
+            <input type="file" id="fondo" accept="image/*,video/*">
+        </div>
+
+        <div class="form-group">
+            <label for="audioPrincipal">Audio Principal (Voz/Pista):</label>
+            <input type="file" id="audioPrincipal" accept="audio/*">
+        </div>
+
+        <div class="form-group">
+            <label for="musicaFondo">Música de Fondo:</label>
+            <input type="file" id="musicaFondo" accept="audio/*">
+            
+            <div class="music-preview-panel" id="musicPreviewPanel" style="display: none;">
+                <div class="music-seek-row">
+                    <button type="button" id="btnSeekBack10" title="Retroceder 10 segundos">◀◀ 10s</button>
+                    <button type="button" id="btnSeekBack1" title="Retroceder 1 segundo">◀ 1s</button>
+                    
+                    <div class="music-slider-container">
+                        <span class="music-time-label" id="musicCurrentTime">0:00</span>
+                        <input type="range" class="music-slider" id="musicSlider" value="0" min="0" max="100" step="0.1">
+                        <span class="music-time-label" id="musicDuration">0:00</span>
+                    </div>
+                    
+                    <button type="button" id="btnSeekFwd1" title="Adelantar 1 segundo">1s ▶</button>
+                    <button type="button" id="btnSeekFwd10" title="Adelantar 10 segundos">10s ▶▶</button>
+                </div>
+                
+                <div class="music-controls-row">
+                    <button type="button" id="btnPreviewPlay" class="btn-play">▶ Preview</button>
+                    <button type="button" id="btnPreviewPause" class="btn-stop">⏸ Pausar</button>
+                    <button type="button" id="btnMarkStart" class="btn-mark">⏱ Marcar inicio aquí</button>
+                    <span class="music-mark-display" id="musicMarkDisplay">Inicio: 0.00s</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="volumenMusica">Volumen Música: <span id="volValue">50</span>%</label>
+            <input type="range" id="volumenMusica" min="0" max="100" value="50">
+        </div>
+
+        <div class="form-group">
+            <label for="orientacion">Orientación del Video:</label>
+            <select id="orientacion">
+                <option value="auto">Automática (detectar dispositivo)</option>
+                <option value="landscape">Horizontal (16:9) - PC</option>
+                <option value="portrait">Vertical (9:16) - Celular/Redes</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="efectoOndas">Efectos de Visualización (Sobre el fondo):</label>
+            <select id="efectoOndas">
+                <option value="barras">Barras de Frecuencia (Inferior)</option>
+                <option value="ondas_suaves">Onda Suave (Línea Única)</option>
+                <option value="circulos">Círculos Concéntricos (Simétricos)</option>
+                <option value="particulas">Partículas Reactivas (Simétricas)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tiempoExtra">Tiempo extra después del audio principal:</label>
+            <select id="tiempoExtra">
+                <option value="0">Sin tiempo extra (termina con el audio)</option>
+                <option value="5">5 segundos extra</option>
+                <option value="10" selected>10 segundos extra (recomendado)</option>
+                <option value="15">15 segundos extra</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="duracionMusica">Duración máxima de la música:</label>
+            <select id="duracionMusica">
+                <option value="audio">Hasta que termine el audio principal</option>
+                <option value="30">30 segundos</option>
+                <option value="60">60 segundos</option>
+                <option value="90" selected>90 segundos (WhatsApp)</option>
+                <option value="120">120 segundos</option>
+                <option value="completa">Canción completa (sin límite)</option>
+            </select>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-play" id="btnReproducir">▶ Reproducir</button>
+            <button class="btn-stop" id="btnDetener">⏹ Detener</button>
+            <button class="btn-export" id="btnExportar">💾 Exportar</button>
+            <button class="btn-reset" id="btnReiniciar">↺ Reiniciar</button>
+        </div>
+
+        <div class="timer-display" id="timerDisplay"></div>
+
+        <canvas id="visualizador"></canvas>
+    </div>
+
+    <audio id="audioPrincipalEl" crossorigin="anonymous"></audio>
+    <audio id="musicaFondoEl" crossorigin="anonymous"></audio>
+
+    <script>
+        const canvas = document.getElementById('visualizador');
+        const ctx = canvas.getContext('2d');
+        
+        const inputFondo = document.getElementById('fondo');
+        const inputAudioPrincipal = document.getElementById('audioPrincipal');
+        const inputMusicaFondo = document.getElementById('musicaFondo');
+        
+        const audioPrincipalEl = document.getElementById('audioPrincipalEl');
+        const musicaFondoEl = document.getElementById('musicaFondoEl');
+        
+        const selectorEfecto = document.getElementById('efectoOndas');
+        const sliderVolumen = document.getElementById('volumenMusica');
+        const volValue = document.getElementById('volValue');
+        const selectorTiempoExtra = document.getElementById('tiempoExtra');
+        const selectorOrientacion = document.getElementById('orientacion');
+        const selectorDuracionMusica = document.getElementById('duracionMusica');
+
+        const btnReproducir = document.getElementById('btnReproducir');
+        const btnDetener = document.getElementById('btnDetener');
+        const btnReiniciar = document.getElementById('btnReiniciar');
+        const btnExportar = document.getElementById('btnExportar');
+        const timerDisplay = document.getElementById('timerDisplay');
+
+        let audioCtx, analyser, gainNode, compressorNode;
+        let isInitialized = false;
+        let isPlaying = false;
+        let animationId;
+        let backgroundMedia = null;
+
+        let audioEnded = false;
+
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+        let audioDestination;
+        let autoStopTimeout = null;
+        let countdownInterval = null;
+
+        let musicStartTime = 0;
+
+        function resizeCanvas() {
+            const orientacion = selectorOrientacion.value;
+            
+            if (orientacion === 'auto') {
+                if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
+                    canvas.width = 540;
+                    canvas.height = 960;
+                } else {
+                    canvas.width = 960;
+                    canvas.height = 540;
+                }
+            } else if (orientacion === 'portrait') {
+                canvas.width = 540;
+                canvas.height = 960;
+            } else {
+                canvas.width = 960;
+                canvas.height = 540;
+            }
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        selectorOrientacion.addEventListener('change', resizeCanvas);
+        
+        setTimeout(() => { resizeCanvas(); }, 100);
+
+        inputFondo.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (backgroundMedia && backgroundMedia.src) {
+                URL.revokeObjectURL(backgroundMedia.src);
+            }
+
+            const url = URL.createObjectURL(file);
+
+            if (file.type.startsWith('video/')) {
+                backgroundMedia = document.createElement('video');
+                backgroundMedia.src = url;
+                backgroundMedia.loop = true;
+                backgroundMedia.muted = true;
+                backgroundMedia.playsInline = true;
+                backgroundMedia.crossOrigin = "anonymous";
+            } else {
+                backgroundMedia = new Image();
+                backgroundMedia.src = url;
+            }
+        });
+
+        inputAudioPrincipal.addEventListener('change', function(e) {
+            if (e.target.files[0]) audioPrincipalEl.src = URL.createObjectURL(e.target.files[0]);
+        });
+        
+        inputMusicaFondo.addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                musicaFondoEl.src = URL.createObjectURL(e.target.files[0]);
+                
+                document.getElementById('musicPreviewPanel').style.display = 'flex';
+                musicStartTime = 0;
+                document.getElementById('musicMarkDisplay').textContent = 'Inicio: 0.00s';
+                
+                const musicSlider = document.getElementById('musicSlider');
+                musicSlider.value = 0;
+                document.getElementById('musicCurrentTime').textContent = '0:00';
+                document.getElementById('musicDuration').textContent = '0:00';
+            }
+        });
+
+        function setupAudio() {
+            if (isInitialized) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            gainNode = audioCtx.createGain();
+            
+            compressorNode = audioCtx.createDynamicsCompressor();
+            compressorNode.threshold.value = -3;
+            compressorNode.knee.value = 0;
+            compressorNode.ratio.value = 20;
+            compressorNode.attack.value = 0.003;
+            compressorNode.release.value = 0.25;
+            
+            audioDestination = audioCtx.createMediaStreamDestination();
+
+            if (audioPrincipalEl.src) {
+                const sourcePrincipal = audioCtx.createMediaElementSource(audioPrincipalEl);
+                sourcePrincipal.connect(analyser);
+                analyser.connect(audioDestination);
+                analyser.connect(audioCtx.destination);
+            }
+            if (musicaFondoEl.src) {
+                const sourceFondo = audioCtx.createMediaElementSource(musicaFondoEl);
+                sourceFondo.connect(gainNode);
+                gainNode.connect(compressorNode);
+                compressorNode.connect(audioDestination);
+                compressorNode.connect(audioCtx.destination);
+            }
+            isInitialized = true;
+        }
+
+        sliderVolumen.addEventListener('input', function() {
+            volValue.textContent = this.value;
+            if (gainNode) {
+                gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(this.value / 100, audioCtx.currentTime);
+            } else {
+                musicaFondoEl.volume = this.value / 100;
+            }
+        });
+
+        const musicSlider = document.getElementById('musicSlider');
+        const musicCurrentTimeEl = document.getElementById('musicCurrentTime');
+        const musicDurationEl = document.getElementById('musicDuration');
+        const musicMarkDisplay = document.getElementById('musicMarkDisplay');
+        
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        musicaFondoEl.addEventListener('loadedmetadata', () => {
+            musicSlider.max = musicaFondoEl.duration;
+            musicSlider.step = 0.1;
+            musicDurationEl.textContent = formatTime(musicaFondoEl.duration);
+        });
+        
+        musicaFondoEl.addEventListener('timeupdate', () => {
+            if (!musicSlider.dragging) {
+                musicSlider.value = musicaFondoEl.currentTime;
+            }
+            musicCurrentTimeEl.textContent = formatTime(musicaFondoEl.currentTime);
+        });
+        
+        musicSlider.addEventListener('mousedown', () => { musicSlider.dragging = true; });
+        musicSlider.addEventListener('touchstart', () => { musicSlider.dragging = true; });
+        
+        musicSlider.addEventListener('mouseup', () => {
+            musicSlider.dragging = false;
+            musicaFondoEl.currentTime = parseFloat(musicSlider.value);
+        });
+        musicSlider.addEventListener('touchend', () => {
+            musicSlider.dragging = false;
+            musicaFondoEl.currentTime = parseFloat(musicSlider.value);
+        });
+        
+        musicSlider.addEventListener('input', () => {
+            musicCurrentTimeEl.textContent = formatTime(parseFloat(musicSlider.value));
+            if (musicaFondoEl.paused) {
+                musicaFondoEl.currentTime = parseFloat(musicSlider.value);
+            }
+        });
+        
+        document.getElementById('btnPreviewPlay').addEventListener('click', () => {
+            if (musicaFondoEl.src) musicaFondoEl.play();
+        });
+
+        document.getElementById('btnPreviewPause').addEventListener('click', () => {
+            musicaFondoEl.pause();
+        });
+
+        document.getElementById('btnMarkStart').addEventListener('click', () => {
+            if (musicaFondoEl.src) {
+                musicStartTime = musicaFondoEl.currentTime;
+                musicaFondoEl.pause();
+                musicMarkDisplay.textContent = `Inicio: ${musicStartTime.toFixed(2)}s`;
+                console.log("Punto de inicio de música marcado en:", musicStartTime);
+            }
+        });
+        
+        document.getElementById('btnSeekBack10').addEventListener('click', () => {
+            musicaFondoEl.currentTime = Math.max(0, musicaFondoEl.currentTime - 10);
+        });
+        document.getElementById('btnSeekBack1').addEventListener('click', () => {
+            musicaFondoEl.currentTime = Math.max(0, musicaFondoEl.currentTime - 1);
+        });
+        document.getElementById('btnSeekFwd1').addEventListener('click', () => {
+            musicaFondoEl.currentTime = Math.min(musicaFondoEl.duration || 9999, musicaFondoEl.currentTime + 1);
+        });
+        document.getElementById('btnSeekFwd10').addEventListener('click', () => {
+            musicaFondoEl.currentTime = Math.min(musicaFondoEl.duration || 9999, musicaFondoEl.currentTime + 10);
+        });
+
+        function drawBackground() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!backgroundMedia) return;
+
+            if (backgroundMedia.tagName === 'IMG' && !backgroundMedia.complete) return;
+
+            const mediaWidth = backgroundMedia.videoWidth || backgroundMedia.naturalWidth;
+            const mediaHeight = backgroundMedia.videoHeight || backgroundMedia.naturalHeight;
+            
+            if (!mediaWidth || !mediaHeight) return;
+
+            const mediaRatio = mediaWidth / mediaHeight;
+            const canvasRatio = canvas.width / canvas.height;
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (mediaRatio > canvasRatio) {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / mediaRatio;
+                offsetX = 0;
+                offsetY = (canvas.height - drawHeight) / 2;
+            } else {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * mediaRatio;
+                offsetX = (canvas.width - drawWidth) / 2;
+                offsetY = 0;
+            }
+
+            ctx.drawImage(backgroundMedia, offsetX, offsetY, drawWidth, drawHeight);
+        }
+
+        function draw() {
+            if (!isPlaying && !backgroundMedia) return;
+            animationId = requestAnimationFrame(draw);
+
+            drawBackground();
+
+            if (!isPlaying || !analyser) return;
+
+            if (audioEnded) return;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const efecto = selectorEfecto.value;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            if (efecto === 'ondas_suaves') {
+                analyser.getByteTimeDomainData(dataArray);
+                
+                ctx.beginPath();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#00d2ff';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#00d2ff';
+
+                const sliceWidth = canvas.width / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = (v * canvas.height) / 2;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                    x += sliceWidth;
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            } 
+            else {
+                analyser.getByteFrequencyData(dataArray);
+
+                if (efecto === 'barras') {
+                    const maxBarHeight = canvas.height * 0.40;
+                    const barWidth = (canvas.width / bufferLength) * 2.5;
+                    let x = 0;
+                    
+                    for (let i = 0; i < bufferLength; i++) {
+                        const barHeight = (dataArray[i] / 255) * maxBarHeight;
+                        const r = barHeight + 25 * (i / bufferLength);
+                        const g = 250 * (i / bufferLength);
+                        const b = 50;
+                        ctx.fillStyle = `rgb(${r},${g},${b})`;
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        x += barWidth + 1;
+                    }
+                } 
+                else if (efecto === 'circulos' || efecto === 'particulas') {
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const activeBins = 64;
+                    
+                    for (let i = 0; i < activeBins; i++) {
+                        const angle = (i / activeBins) * Math.PI * 2;
+                        const radius = (dataArray[i] / 255) * (Math.min(canvas.width, canvas.height) / 2.5);
+                        
+                        if (efecto === 'circulos') {
+                            ctx.beginPath();
+                            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                            ctx.strokeStyle = `hsl(${i * 4}, 100%, 60%)`;
+                            ctx.lineWidth = 2;
+                            ctx.shadowBlur = 5;
+                            ctx.shadowColor = `hsl(${i * 4}, 100%, 60%)`;
+                            ctx.stroke();
+                        } 
+                        else if (efecto === 'particulas') {
+                            const x = centerX + Math.cos(angle) * radius;
+                            const y = centerY + Math.sin(angle) * radius;
+                            
+                            ctx.beginPath();
+                            ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                            ctx.fillStyle = `hsl(${i * 4}, 100%, 70%)`;
+                            ctx.shadowBlur = 8;
+                            ctx.shadowColor = `hsl(${i * 4}, 100%, 70%)`;
+                            ctx.fill();
+                        }
+                    }
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        function stopRecordingAndDownload() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            if (autoStopTimeout) {
+                clearTimeout(autoStopTimeout);
+                autoStopTimeout = null;
+            }
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            isRecording = false;
+            isPlaying = false;
+            audioEnded = false;
+            timerDisplay.textContent = '';
+            btnExportar.textContent = '💾 Exportar';
+            btnExportar.classList.remove('btn-stop');
+            btnExportar.classList.add('btn-export');
+            btnExportar.disabled = false;
+            btnReproducir.disabled = false;
+            btnDetener.disabled = false;
+        }
+
+        // ✅ CORREGIDO: Fade out con automatización nativa de Web Audio API (sin distorsión)
+        function startMusicFadeOut(duration) {
+            if (!gainNode || !audioCtx) return;
+            
+            const currentTime = audioCtx.currentTime;
+            const currentVolume = gainNode.gain.value;
+            
+            // Cancelar cualquier automatización previa
+            gainNode.gain.cancelScheduledValues(currentTime);
+            // Establecer el volumen actual como punto de partida
+            gainNode.gain.setValueAtTime(currentVolume, currentTime);
+            // Transición suave lineal hasta 0
+            gainNode.gain.linearRampToValueAtTime(0, currentTime + duration);
+            
+            // Pausar el audio cuando termine el fade out
+            setTimeout(() => {
+                musicaFondoEl.pause();
+            }, duration * 1000);
+        }
+
+        // ✅ CORREGIDO: Fade in con automatización nativa de Web Audio API (sin distorsión)
+        function startMusicFadeIn(duration) {
+            if (!gainNode || !audioCtx) return;
+            
+            const currentTime = audioCtx.currentTime;
+            const currentVolume = gainNode.gain.value;
+            const targetVolume = 1.0; // 100%
+            
+            // Cancelar cualquier automatización previa
+            gainNode.gain.cancelScheduledValues(currentTime);
+            // Establecer el volumen actual como punto de partida
+            gainNode.gain.setValueAtTime(currentVolume, currentTime);
+            // Transición suave lineal hasta 100%
+            gainNode.gain.linearRampToValueAtTime(targetVolume, currentTime + duration);
+        }
+
+        btnExportar.addEventListener('click', async () => {
+            if (!isRecording) {
+                if (!audioPrincipalEl.src && !musicaFondoEl.src) {
+                    alert('Debes cargar al menos un archivo de audio para exportar.');
+                    return;
+                }
+
+                try {
+                    setupAudio();
+                    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+                    const canvasStream = canvas.captureStream(30);
+                    
+                    const combinedStream = new MediaStream([
+                        ...canvasStream.getVideoTracks(),
+                        ...audioDestination.stream.getAudioTracks()
+                    ]);
+
+                    const mimeTypes = [
+                        'video/webm;codecs=vp9,opus',
+                        'video/webm;codecs=vp8,opus',
+                        'video/webm',
+                    ];
+
+                    let selectedMimeType = '';
+                    for (let type of mimeTypes) {
+                        if (MediaRecorder.isTypeSupported(type)) {
+                            selectedMimeType = type;
+                            break;
+                        }
+                    }
+
+                    if (!selectedMimeType) {
+                        alert('Tu navegador no soporta la grabación de video.');
+                        return;
+                    }
+
+                    mediaRecorder = new MediaRecorder(combinedStream, {
+                        mimeType: selectedMimeType,
+                        videoBitsPerSecond: 5000000
+                    });
+
+                    recordedChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordedChunks, {
+                            type: selectedMimeType
+                        });
+                        
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = `te-lo-cuento-${Date.now()}.webm`;
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        setTimeout(() => {
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }, 100);
+                        
+                        timerDisplay.textContent = '✅ Video exportado y descargado automáticamente';
+                        setTimeout(() => {
+                            timerDisplay.textContent = '';
+                        }, 5000);
+                    };
+
+                    mediaRecorder.start(1000);
+                    isRecording = true;
+                    
+                    btnExportar.textContent = '⏹ Grabando...';
+                    btnExportar.classList.remove('btn-export');
+                    btnExportar.classList.add('btn-stop');
+                    btnExportar.disabled = true;
+                    btnReproducir.disabled = true;
+                    btnDetener.disabled = false;
+                    
+                    audioPrincipalEl.currentTime = 0;
+                    musicaFondoEl.currentTime = musicStartTime;
+                    audioEnded = false;
+                    
+                    if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') {
+                        backgroundMedia.currentTime = 0;
+                    }
+                    
+                    if (audioPrincipalEl.src) audioPrincipalEl.play();
+                    if (musicaFondoEl.src) musicaFondoEl.play();
+                    if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') {
+                        backgroundMedia.play().catch(err => console.error("Error al reproducir video:", err));
+                    }
+                    
+                    isPlaying = true;
+                    draw();
+                    
+                    const tiempoExtra = parseInt(selectorTiempoExtra.value);
+                    const duracionMusicaValor = selectorDuracionMusica.value;
+                    
+                    let duracionAudioTotal = 0;
+                    if (audioPrincipalEl.src && audioPrincipalEl.duration) {
+                        duracionAudioTotal = audioPrincipalEl.duration + tiempoExtra;
+                    }
+                    
+                    let duracionMusicaTotal = 0;
+                    if (musicaFondoEl.src) {
+                        if (duracionMusicaValor === 'audio') {
+                            duracionMusicaTotal = audioPrincipalEl.duration || 0;
+                        } else if (duracionMusicaValor === 'completa') {
+                            duracionMusicaTotal = (musicaFondoEl.duration || 0) - musicStartTime;
+                        } else {
+                            duracionMusicaTotal = parseInt(duracionMusicaValor);
+                        }
+                    }
+                    
+                    const duracionVideoTotal = Math.max(duracionAudioTotal, duracionMusicaTotal);
+                    const tiempoHastaFinMusica = duracionMusicaTotal;
+                    
+                    const handleAudioEnd = () => {
+                        audioEnded = true;
+                        timerDisplay.textContent = '🎵 Audio principal finalizado. Efectos desactivados.';
+                        
+                        if (musicaFondoEl.src && !musicaFondoEl.paused) {
+                            startMusicFadeIn(3);
+                        }
+                        
+                        audioPrincipalEl.removeEventListener('ended', handleAudioEnd);
+                    };
+                    
+                    if (audioPrincipalEl.src) {
+                        audioPrincipalEl.addEventListener('ended', handleAudioEnd);
+                    }
+                    
+                    if (musicaFondoEl.src && tiempoHastaFinMusica > 3) {
+                        const tiempoParaFadeOut = tiempoHastaFinMusica - 3;
+                        setTimeout(() => {
+                            startMusicFadeOut(3);
+                        }, tiempoParaFadeOut * 1000);
+                    }
+                    
+                    autoStopTimeout = setTimeout(() => {
+                        timerDisplay.textContent = '⏹ Finalizando grabación...';
+                        stopRecordingAndDownload();
+                    }, duracionVideoTotal * 1000);
+                    
+                    const orientacionTexto = canvas.width > canvas.height ? 'Horizontal (16:9)' : 'Vertical (9:16)';
+                    let mensajeMusica = '';
+                    if (duracionMusicaValor === 'audio') {
+                        mensajeMusica = '\nMúsica: Hasta que termine el audio principal';
+                    } else if (duracionMusicaValor === 'completa') {
+                        mensajeMusica = '\nMúsica: Canción completa';
+                    } else {
+                        mensajeMusica = `\nMúsica: Límite de ${duracionMusicaValor}s`;
+                    }
+                    
+                    alert(`🔴 Grabación iniciada.\n\nDuración total: ${duracionVideoTotal.toFixed(1)} segundos\nMúsica inicia en: ${musicStartTime.toFixed(2)}s${mensajeMusica}\n\nSe detendrá y descargará AUTOMÁTICAMENTE al finalizar.\n\nLos efectos se desactivarán cuando termine el audio principal.\nLa música hará fade in al 100% cuando termine la voz.`);
+
+                } catch (err) {
+                    console.error('Error al iniciar grabación:', err);
+                    alert('Error al iniciar la grabación: ' + err.message);
+                    isRecording = false;
+                    btnExportar.textContent = '💾 Exportar';
+                    btnExportar.classList.remove('btn-stop');
+                    btnExportar.classList.add('btn-export');
+                    btnExportar.disabled = false;
+                    btnReproducir.disabled = false;
+                }
+            } else {
+                timerDisplay.textContent = '⏹ Deteniendo grabación manualmente...';
+                stopRecordingAndDownload();
+            }
+        });
+
+        btnReproducir.addEventListener('click', async () => {
+            setupAudio();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            
+            audioEnded = false;
+            
+            if (audioPrincipalEl.src) audioPrincipalEl.play();
+            
+            if (musicaFondoEl.src) {
+                musicaFondoEl.currentTime = musicStartTime;
+                musicaFondoEl.play();
+            }
+            
+            if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') {
+                backgroundMedia.play().catch(err => console.error("Error al reproducir video:", err));
+            }
+            
+            isPlaying = true;
+            draw();
+            
+            const handleAudioEndPreview = () => {
+                audioEnded = true;
+                timerDisplay.textContent = '🎵 Audio principal finalizado. Efectos desactivados.';
+                
+                if (musicaFondoEl.src && !musicaFondoEl.paused) {
+                    startMusicFadeIn(3);
+                }
+                
+                audioPrincipalEl.removeEventListener('ended', handleAudioEndPreview);
+            };
+            
+            if (audioPrincipalEl.src) {
+                audioPrincipalEl.addEventListener('ended', handleAudioEndPreview);
+            }
+        });
+
+        btnDetener.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecordingAndDownload();
+            }
+            
+            isPlaying = false;
+            audioEnded = false;
+            cancelAnimationFrame(animationId);
+            audioPrincipalEl.pause();
+            musicaFondoEl.pause();
+            
+            if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') {
+                backgroundMedia.pause();
+            }
+            
+            // Limpiar automatizaciones del gainNode al detener
+            if (gainNode && audioCtx) {
+                gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
+            }
+            
+            timerDisplay.textContent = '';
+            drawBackground();
+        });
+
+        btnReiniciar.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecordingAndDownload();
+            }
+            
+            isPlaying = false;
+            audioEnded = false;
+            cancelAnimationFrame(animationId);
+            audioPrincipalEl.pause();
+            musicaFondoEl.pause();
+            audioPrincipalEl.currentTime = 0;
+            
+            musicaFondoEl.currentTime = 0;
+            musicStartTime = 0;
+            musicMarkDisplay.textContent = 'Inicio: 0.00s';
+            musicSlider.value = 0;
+            musicCurrentTimeEl.textContent = '0:00';
+            
+            // Resetear gainNode a volumen por defecto y limpiar automatizaciones
+            if (gainNode && audioCtx) {
+                gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            }
+            
+            if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') {
+                backgroundMedia.pause();
+                backgroundMedia.currentTime = 0;
+            }
+            
+            selectorEfecto.value = 'barras';
+            sliderVolumen.value = 50;
+            volValue.textContent = '50';
+            
+            timerDisplay.textContent = '';
+            drawBackground();
+        });
+    </script>
+</body>
+</html>
