@@ -356,7 +356,6 @@
             </select>
         </div>
 
-        <!-- === NUEVO: Selector de Intro Visual (Pre-roll) === -->
         <div class="form-group">
             <label for="introVisual">Intro visual (Retraso de la voz):</label>
             <select id="introVisual">
@@ -366,7 +365,6 @@
                 <option value="3">3 segundos</option>
             </select>
         </div>
-        <!-- ================================================ -->
 
         <div class="form-group">
             <label for="duracionMusica">Duración máxima de la música:</label>
@@ -422,7 +420,7 @@
         const selectorTiempoExtra = document.getElementById('tiempoExtra');
         const selectorOrientacion = document.getElementById('orientacion');
         const selectorDuracionMusica = document.getElementById('duracionMusica');
-        const selectorIntroVisual = document.getElementById('introVisual'); // NUEVO
+        const selectorIntroVisual = document.getElementById('introVisual');
 
         const btnReproducir = document.getElementById('btnReproducir');
         const btnDetener = document.getElementById('btnDetener');
@@ -444,7 +442,7 @@
         let audioDestination;
         let autoStopTimeout = null;
         let countdownInterval = null;
-        let introDelayTimeout = null; // NUEVO: Para controlar el retraso de la voz
+        let introDelayTimeout = null;
 
         let musicStartTime = 0;
         let currentBlobUrl = null;
@@ -509,7 +507,10 @@
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 256;
+            
             gainNode = audioCtx.createGain();
+            // CORRECCIÓN: Sincronizar el gainNode con el valor actual del slider al inicializar
+            gainNode.gain.value = sliderVolumen.value / 100;
             
             compressorNode = audioCtx.createDynamicsCompressor();
             compressorNode.threshold.value = -3;
@@ -520,14 +521,22 @@
             
             audioDestination = audioCtx.createMediaStreamDestination();
 
+            // CORRECCIÓN CRÍTICA: Forzar volumen nativo al 100% para que el Web Audio API 
+            // tenga el control absoluto y exclusivo de la mezcla, evitando interferencias del navegador.
+            audioPrincipalEl.volume = 1.0;
+            musicaFondoEl.volume = 1.0;
+
             if (audioPrincipalEl.src) {
                 const sourcePrincipal = audioCtx.createMediaElementSource(audioPrincipalEl);
+                // Cadena 100% independiente para el audio principal
                 sourcePrincipal.connect(analyser);
                 analyser.connect(audioDestination);
                 analyser.connect(audioCtx.destination);
             }
+            
             if (musicaFondoEl.src) {
                 const sourceFondo = audioCtx.createMediaElementSource(musicaFondoEl);
+                // Cadena 100% independiente para la música
                 sourceFondo.connect(gainNode);
                 gainNode.connect(compressorNode);
                 compressorNode.connect(audioDestination);
@@ -536,13 +545,18 @@
             isInitialized = true;
         }
 
+        // CORRECCIÓN: Lógica de volumen blindada
         sliderVolumen.addEventListener('input', function() {
+            const vol = this.value / 100;
             volValue.textContent = this.value;
-            if (gainNode) {
+            
+            if (gainNode && audioCtx) {
+                // Si el contexto de audio ya está inicializado, usamos exclusivamente el nodo de ganancia
                 gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(this.value / 100, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
             } else {
-                musicaFondoEl.volume = this.value / 100;
+                // Fallback si aún no se ha inicializado el Web Audio API
+                musicaFondoEl.volume = vol;
             }
         });
 
@@ -721,7 +735,7 @@
             if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
             if (autoStopTimeout) { clearTimeout(autoStopTimeout); autoStopTimeout = null; }
             if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-            if (introDelayTimeout) { clearTimeout(introDelayTimeout); introDelayTimeout = null; } // NUEVO
+            if (introDelayTimeout) { clearTimeout(introDelayTimeout); introDelayTimeout = null; }
             
             isRecording = false;
             isPlaying = false;
@@ -860,7 +874,6 @@
                     
                     if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') backgroundMedia.currentTime = 0;
                     
-                    // 1. Iniciar fondo y música inmediatamente (t = 0)
                     if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') {
                         backgroundMedia.play().catch(err => console.error("Error video:", err));
                     }
@@ -869,7 +882,6 @@
                     isPlaying = true;
                     draw();
 
-                    // 2. NUEVO: Retrasar el inicio del audio principal
                     const introDelay = parseInt(selectorIntroVisual.value) || 0;
                     if (audioPrincipalEl.src) {
                         introDelayTimeout = setTimeout(() => {
@@ -880,7 +892,6 @@
                     const tiempoExtra = parseInt(selectorTiempoExtra.value);
                     const duracionMusicaValor = selectorDuracionMusica.value;
                     
-                    // 3. Recalcular duraciones totales incluyendo el introDelay
                     let duracionAudioTotal = introDelay;
                     if (audioPrincipalEl.src && audioPrincipalEl.duration) {
                         duracionAudioTotal += audioPrincipalEl.duration + tiempoExtra;
@@ -953,7 +964,6 @@
             isPlaying = true;
             draw();
 
-            // NUEVO: Retrasar audio principal en preview también
             if (audioPrincipalEl.src) {
                 introDelayTimeout = setTimeout(() => {
                     if (isPlaying) audioPrincipalEl.play();
@@ -977,7 +987,7 @@
             audioPrincipalEl.pause();
             musicaFondoEl.pause();
             if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') backgroundMedia.pause();
-            if (introDelayTimeout) { clearTimeout(introDelayTimeout); introDelayTimeout = null; } // NUEVO
+            if (introDelayTimeout) { clearTimeout(introDelayTimeout); introDelayTimeout = null; }
             if (gainNode && audioCtx) {
                 gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
                 gainNode.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
@@ -999,11 +1009,16 @@
             musicMarkDisplay.textContent = 'Inicio: 0.00s';
             musicSlider.value = 0;
             musicCurrentTimeEl.textContent = '0:00';
-            if (introDelayTimeout) { clearTimeout(introDelayTimeout); introDelayTimeout = null; } // NUEVO
+            if (introDelayTimeout) { clearTimeout(introDelayTimeout); introDelayTimeout = null; }
+            
+            // CORRECCIÓN: Resetear volúmenes nativos y del nodo de ganancia
+            audioPrincipalEl.volume = 1.0;
+            musicaFondoEl.volume = 1.0;
             if (gainNode && audioCtx) {
                 gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
                 gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
             }
+            
             if (backgroundMedia && backgroundMedia.tagName === 'VIDEO') {
                 backgroundMedia.pause();
                 backgroundMedia.currentTime = 0;
